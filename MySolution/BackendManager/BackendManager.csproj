@@ -67,17 +67,29 @@
     <Compile Include="Configuration\BackendConfiguration.cs" />
     <Compile Include="Configuration\ConfigurationManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SQL\SqlCreateTable.cs" />
     <Compile Include="SQL\SqlCreateUserWithRights.cs" />
     <Compile Include="SQL\SqlDropDataBase.cs" />
     <Compile Include="SQL\SqlDropUser.cs" />
     <Compile Include="SQL\SqlSetupDataBase.cs" />
     <Compile Include="SQL\SqlTaskBase.cs" />
+    <Compile Include="Sync\ColumnDescription.cs" />
+    <Compile Include="Sync\TableBuilder.cs" />
+    <Compile Include="Sync\TableDescription.cs" />
     <Compile Include="Wizard.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\DataInfoFramework\DataInfoFramework.csproj">
+      <Project>{dacb97ec-ad71-43f0-8f6f-17d29f5f0e96}</Project>
+      <Name>DataInfoFramework</Name>
+    </ProjectReference>
     <ProjectReference Include="..\FileDataStash\FileDataStash.csproj">
       <Project>{fd6924f2-5e12-44fb-97d8-011644690743}</Project>
       <Name>FileDataStash</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Model\Model.csproj">
+      <Project>{db68a373-273a-485e-ba3d-f198b4296109}</Project>
+      <Name>Model</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

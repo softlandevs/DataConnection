@@ -14,10 +14,19 @@ namespace BackendManager
             CreateDataBase(config, superConfig);
             CreateNewUserWithRights(config, superConfig);
         }
+
         public void TeardownBackend(BackendConfiguration config, BackendConfiguration superConfig)
         {
             DropUser(config, superConfig);
             DropDataBase(config, superConfig);
+        }
+
+        public Model.ModelContainerBase ConnectWithBackend(BackendConfiguration config)
+        {
+            var model = new Model.ModelContainer();
+            UpdateTableSchema(model,config);
+
+            return model;
         }
 
         private async void CreateDataBase(BackendConfiguration config, BackendConfiguration superConfig)
@@ -78,6 +87,11 @@ namespace BackendManager
             };
 
             await task.Run();
+        }
+
+        private void UpdateTableSchema(Model.ModelContainer model, BackendConfiguration config)
+        {
+             new Sync.TableBuilder(model,config).Build();
         }
 
     }
