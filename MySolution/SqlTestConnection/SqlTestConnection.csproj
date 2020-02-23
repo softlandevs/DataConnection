@@ -79,6 +79,10 @@
       <Project>{058a2d61-4e2e-44f7-85b3-9dbd526c130f}</Project>
       <Name>BackendManager</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Model\Model.csproj">
+      <Project>{db68a373-273a-485e-ba3d-f198b4296109}</Project>
+      <Name>Model</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Content Include="MyCredentials.txt" />

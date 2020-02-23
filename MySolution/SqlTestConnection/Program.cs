@@ -54,6 +54,7 @@ namespace SqlTestConnection
 
             myWizard.TeardownBackend(newConfig,superConfig);
             myWizard.SetupNewBackend(newConfig,superConfig);
+            var model = myWizard.ConnectWithBackend(newConfig);
         }
     }
 }
