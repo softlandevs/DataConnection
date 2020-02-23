@@ -64,6 +64,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Action\PushDataAction.cs" />
     <Compile Include="Configuration\BackendConfiguration.cs" />
     <Compile Include="Configuration\ConfigurationManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -71,6 +72,7 @@
     <Compile Include="SQL\SqlCreateUserWithRights.cs" />
     <Compile Include="SQL\SqlDropDataBase.cs" />
     <Compile Include="SQL\SqlDropUser.cs" />
+    <Compile Include="SQL\SqlPushData.cs" />
     <Compile Include="SQL\SqlSetupDataBase.cs" />
     <Compile Include="SQL\SqlTaskBase.cs" />
     <Compile Include="Sync\ColumnDescription.cs" />

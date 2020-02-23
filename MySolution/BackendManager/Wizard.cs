@@ -1,4 +1,5 @@
 ﻿using BackendManager.Configuration;
+using Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,12 +22,17 @@ namespace BackendManager
             DropDataBase(config, superConfig);
         }
 
-        public Model.ModelContainerBase ConnectWithBackend(BackendConfiguration config)
+        public Model.ModelContainer ConnectWithBackend(BackendConfiguration config)
         {
             var model = new Model.ModelContainer();
             UpdateTableSchema(model,config);
 
             return model;
+        }
+
+        public void PushDataToBackend(BackendConfiguration newConfig, ModelContainer model)
+        {
+
         }
 
         private async void CreateDataBase(BackendConfiguration config, BackendConfiguration superConfig)
@@ -89,9 +95,24 @@ namespace BackendManager
             await task.Run();
         }
 
-        private void UpdateTableSchema(Model.ModelContainer model, BackendConfiguration config)
+        private async void UpdateTableSchema(Model.ModelContainer model, BackendConfiguration config)
         {
-             new Sync.TableBuilder(model,config).Build();
+            var tables = new Sync.TableBuilder(model).Build();
+
+            foreach (var table in tables)
+            {
+                var task = new SQL.SqlCreateTable()
+                {
+                    Database = config.DataBase,
+                    UserID = config.DataBaseUserId,
+                    Password = config.DataBaseUserPassword,
+                    Port = config.Port,
+                    Server = config.Server,
+                    TableDescription = table
+                };
+                
+                await task.Run();
+            }
         }
 
     }

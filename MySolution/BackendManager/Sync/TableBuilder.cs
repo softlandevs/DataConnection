@@ -13,40 +13,26 @@ namespace BackendManager.Sync
     internal partial class TableBuilder
     {
         public ModelContainerBase Model { get; }
-        public BackendConfiguration Config { get; }
 
-        public TableBuilder(ModelContainerBase model, BackendConfiguration config)
+        public TableBuilder(ModelContainerBase model)
         {
             Model = model;
-            Config = config;
         }
 
-        public void Build()
+        public List<TableDescription> Build()
         {
             var managedClassTypes = Model.GetAllManagedClassTypes();
             var tables = new List<TableDescription>();
 
             foreach (var managedClassType in managedClassTypes)
             {
-                tables.Add(BuildTable(managedClassType, Config));
+                tables.Add(BuildTable(managedClassType));
             }
 
-            foreach (var table in tables)
-            {
-                var task = new SQL.SqlCreateTable()
-                {
-                    Database = Config.DataBase,
-                    UserID = Config.DataBaseUserId,
-                    Password = Config.DataBaseUserPassword,
-                    Port = Config.Port,
-                    Server = Config.Server,
-                    TableDescription = table
-                };
-                Run(task);
-            }
+            return tables;                        
         }
 
-        private TableDescription BuildTable(Type managedClassType, BackendConfiguration config)
+        private TableDescription BuildTable(Type managedClassType)
         {
             var metaModel = new ManagedMetaObjectFactory().CreateMetaObject(managedClassType);
 
@@ -108,9 +94,5 @@ namespace BackendManager.Sync
             throw new Exception("Unknown Type for Sql Column: " + metaProp.Type.ToString());
         }
 
-        private async void Run(SqlCreateTable task)
-        {
-            await task.Run();
-        }
     }
 }
