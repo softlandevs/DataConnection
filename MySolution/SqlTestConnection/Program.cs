@@ -63,7 +63,13 @@ namespace SqlTestConnection
 
             UpdateTestModel(model);
 
-            myWizard.PushDataToBackend(newConfig,model);
+            myWizard.PushDataToBackend(newConfig, model);
+
+            DeleteFromTestModel(model);
+
+            myWizard.LoadDataFromBackend(newConfig, model);
+
+            var i = 0;
         }
 
         private static void CreateTestModel(ModelContainer model)
@@ -86,6 +92,13 @@ namespace SqlTestConnection
         private static void UpdateTestModel(ModelContainer model)
         {
             model.Users.First().Value.DisplayName += " FuckYou";
+        }
+
+        private static void DeleteFromTestModel(ModelContainer model)
+        {
+            model.VersionHead = -1;
+            model.Users.Remove (model.Users.Last().Key);
+            model.Users[model.Users.Last().Key].DisplayName += "Updated";
         }
     }
 }

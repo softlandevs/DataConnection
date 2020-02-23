@@ -25,5 +25,16 @@ namespace Model.Base
             }
         }
 
+        public void LoadConnectedObject(ModelContainer modelContainer)
+        {
+            if (!string.IsNullOrEmpty(Key) && (_cachedTarget == null || _cachedTarget.Key != Key))
+            {
+                Dictionary<string, Target> store = modelContainer.GetStore<Target>();
+                if (store == null) return;
+
+                store.TryGetValue(Key, out _cachedTarget);
+            }
+        }
+
     }
 }

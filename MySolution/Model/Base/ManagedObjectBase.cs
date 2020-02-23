@@ -29,5 +29,16 @@ namespace Model.Base
         [ManagedDateProperty]
         public DateTime LastModified { get; set; }
 
+        public void ReloadConnections(ManagedMetaObject classMeta, ModelContainer modelContainer)
+        {
+            foreach(var referenceProperty in classMeta.Properties.Where(x => x.IsReference))
+            {
+                var propertyInfo = classMeta.Type.GetProperty(referenceProperty.Name);
+                var property = propertyInfo.GetValue(this);
+                var methodInfo = referenceProperty.Type.GetMethod(nameof(ManagedReference<ManagedObjectBase, ManagedObjectBase>.LoadConnectedObject));
+                var method = methodInfo.Invoke(property, new []{ modelContainer});
+            }
+        }
+
     }
 }

@@ -1,4 +1,5 @@
-﻿using Model;
+﻿using BackendManager.Sync;
+using Model;
 using Model.Base;
 using MySql.Data.MySqlClient;
 using System;
@@ -7,7 +8,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using static BackendManager.Sync.TableBuilder;
 
 namespace BackendManager.SQL
 {
@@ -37,6 +37,7 @@ namespace BackendManager.SQL
 
                 var dataToInsert = DataSet.Where(x => x.Verison < 0).ToList();
                 var dataToUpdate = DataSet.Where(x => x.Verison > ModelContainer.VersionHead).ToList();
+                ModelContainer.VersionHead++;
 
                 using (var command = conn.CreateCommand())
                 {
@@ -74,7 +75,7 @@ namespace BackendManager.SQL
 
         }
 
-        private string CreateUpdateCommand(ManagedObjectBase data, ManagedMetaObject metaObjectDescriptor, TableDescription tableDescription,ColumnDescription keyColumnDescriptor)
+        private string CreateUpdateCommand(ManagedObjectBase data, ManagedMetaObject metaObjectDescriptor, TableDescription tableDescription, ColumnDescription keyColumnDescriptor)
         {
             var commandText = @String.Empty;
             data.Verison = ModelContainer.VersionHead;
@@ -84,7 +85,7 @@ namespace BackendManager.SQL
             commandText += $" SET ";
 
             var propertyAssignement = new List<string>();
-            foreach (var columnDescription in tableDescription.Columns.Where(x=>!x.IsKey))
+            foreach (var columnDescription in tableDescription.Columns.Where(x => !x.IsKey))
             {
                 var value = GetValueString(metaObjectDescriptor, columnDescription, data);
                 propertyAssignement.Add($"`{columnDescription.Name}` = '{value}'");
@@ -163,6 +164,27 @@ namespace BackendManager.SQL
                     if (date.HasValue)
                     {
                         return date.Value.ToString("yyyy-MM-dd HH:mm:ss");
+                    }
+                }
+                else if (value.GetType() == typeof(TimeSpan))
+                {
+                    TimeSpan? date = value as TimeSpan?;
+                    if (date.HasValue)
+                    {
+                        return date.Value.TotalSeconds.ToString();
+                    }
+                }
+                else if (value.GetType().IsEnum)
+                {
+                    int val = (int)value;
+                    return (val).ToString();
+                }
+                else if (value.GetType() == typeof(bool))
+                {
+                    bool? date = (bool)value ;
+                    if (date.HasValue)
+                    {
+                        return (date.Value ? 1 : 0).ToString();
                     }
                 }
                 else

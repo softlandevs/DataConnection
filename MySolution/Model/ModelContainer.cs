@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Model.Base;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -23,8 +24,8 @@ namespace Model
 
             Resources = new Dictionary<string, Resource.Resource>();
         }
-
-        public long VersionHead { get; set; } = -1;
+        
+        public long VersionHead { get; set; } = 0;
 
         public Dictionary<string, Personal.User> Users { get; }
         public Dictionary<string, Personal.UserSettings> UserSettingss { get; }

@@ -36,6 +36,12 @@ namespace BackendManager
             action.Invoke();
         }
 
+        public void LoadDataFromBackend(BackendConfiguration newConfig, ModelContainer model)
+        {
+            var action = new Action. LoadDataAction(newConfig, model);
+            action.Invoke();
+        }
+
         private async void CreateDataBase(BackendConfiguration config, BackendConfiguration superConfig)
         {
             var task = new SQL.SqlSetupDataBase()

@@ -1,13 +1,14 @@
-﻿using Model;
+﻿using BackendManager.Sync;
+using Model;
 using Model.Base;
 using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using static BackendManager.Sync.TableBuilder;
 
 namespace BackendManager.SQL
 {
@@ -17,8 +18,9 @@ namespace BackendManager.SQL
         public Model.Base.ManagedMetaObject MetaObjectDescriptor { get; set; }
         public TableDescription TableDescription { get; set; }
         public ModelContainer ModelContainer { get; internal set; }
+        public object DataStore { get; internal set; }
 
-        public async Task Run()
+        public async Task<long> Run()
         {
             var builder = new MySqlConnectionStringBuilder
             {
@@ -30,148 +32,144 @@ namespace BackendManager.SQL
                 SslMode = this.SslMode,
             };
 
+            var maxVersionNumber = ModelContainer.VersionHead;
+
             using (var conn = new MySqlConnection(builder.ConnectionString))
             {
                 Debug.WriteLine("Opening connection");
                 await conn.OpenAsync();
 
-                var dataToInsert = DataSet.Where(x => x.Verison < 0).ToList();
-                var dataToUpdate = DataSet.Where(x => x.Verison > ModelContainer.VersionHead).ToList();
-
                 using (var command = conn.CreateCommand())
                 {
+                    command.CommandText = CreateSelectCommand(TableDescription, ModelContainer);
 
-                    var commandText = CreateInsertCommand(dataToInsert, MetaObjectDescriptor, TableDescription);
-                    if (commandText != null)
+                    using (var reader = await command.ExecuteReaderAsync())
                     {
-                        command.CommandText = commandText;
-                        int rowCount = await command.ExecuteNonQueryAsync();
-                        Debug.WriteLine(String.Format("Number of rows inserted={0}", rowCount));
-                    }
+                        while (await reader.ReadAsync())
+                        {
+                            var guidKey = GetKey(reader);
+                            var data = GetOrCreateDataInstance(guidKey, DataSet, MetaObjectDescriptor, DataStore);
+                            InjectDetailsintoDataInstance(data, reader, TableDescription);
 
-                    RunUpdateCommands(command, dataToUpdate, MetaObjectDescriptor, TableDescription);
+                            maxVersionNumber = Math.Max(data.Verison, maxVersionNumber);
+                        }
+                    }
                 }
 
-                // connection will be closed by the 'using' block
                 Debug.WriteLine("Closing connection");
             }
 
             // connection will be closed by the 'using' block
             Debug.WriteLine("Closing connection");
+
+            return maxVersionNumber;
         }
 
-        private async void RunUpdateCommands(MySqlCommand command, IEnumerable<ManagedObjectBase> dataSet, ManagedMetaObject metaObjectDescriptor, TableDescription tableDescription)
+        private string CreateSelectCommand(TableDescription tableDescription, ModelContainer modelContainer)
         {
-            var keyColumnDescription = tableDescription.Columns.First(x => x.IsKey);
+            var commandText = String.Empty;
 
-            foreach (var data in dataSet)
+            commandText += "SELECT";
+
+            var sVariables = new List<string>();
+            foreach (var column in tableDescription.Columns.OrderBy(x => !x.IsKey)) //Key always needs to be the first variable
             {
-                var commandText = CreateUpdateCommand(data, MetaObjectDescriptor, TableDescription, keyColumnDescription);
-                command.CommandText = commandText;
-                int rowCount = await command.ExecuteNonQueryAsync();
-                Debug.WriteLine(String.Format("Number of rows inserted={0}", rowCount));
+                sVariables.Add($"`{column.Name}`");
             }
-
-        }
-
-        private string CreateUpdateCommand(ManagedObjectBase data, ManagedMetaObject metaObjectDescriptor, TableDescription tableDescription, ColumnDescription keyColumnDescriptor)
-        {
-            var commandText = @String.Empty;
-            data.Verison = ModelContainer.VersionHead;
-
-            commandText += "UPDATE";
+            commandText += $" {string.Join(", ", sVariables)}";
+            commandText += " FROM";
             commandText += $" `{tableDescription.Name}`";
-            commandText += $" SET ";
-
-            var propertyAssignement = new List<string>();
-            foreach (var columnDescription in tableDescription.Columns.Where(x => !x.IsKey))
-            {
-                var value = GetValueString(metaObjectDescriptor, columnDescription, data);
-                propertyAssignement.Add($"`{columnDescription.Name}` = '{value}'");
-            }
-            commandText += $"{string.Join(", ", propertyAssignement)}";
-
-            commandText += " WHERE";
-
-            var keyValue = GetValueString(metaObjectDescriptor, keyColumnDescriptor, data);
-            commandText += $" `{keyColumnDescriptor.Name}` = '{keyValue}'";
+            commandText += $" WHERE {nameof(Model.Base.ManagedObjectBase.Verison)}";
+            commandText += $" >";
+            commandText += $" '{modelContainer.VersionHead}'";
 
             return commandText;
         }
 
-        private string CreateInsertCommand(IEnumerable<Model.Base.ManagedObjectBase> dataSet, Model.Base.ManagedMetaObject metaObjectDescriptor, TableDescription tableDescription)
+        private string GetKey(DbDataReader reader)
         {
-            if (!dataSet.Any()) return null;
-
-            var commandText = @String.Empty;
-
-            commandText += "INSERT INTO";
-            commandText += $" `{tableDescription.Name}`";
-            commandText += $" (";
-
-            var columns = new List<string>();
-            foreach (var columnDescription in tableDescription.Columns)
-            {
-                columns.Add($"`{columnDescription.Name}`");
-            }
-            commandText += $"{string.Join(", ", columns)}";
-            commandText += $")";
-
-            commandText += $" VALUES";
-
-            var sValues = new List<string>();
-
-            foreach (var entry in dataSet)
-            {
-                entry.Verison = ModelContainer.VersionHead;
-
-                var sValue = new List<string>();
-                foreach (var columnDescription in tableDescription.Columns)
-                {
-                    var value = GetValueString(metaObjectDescriptor, columnDescription, entry);
-                    sValue.Add($"'{value.ToString()}'");
-
-                }
-                sValues.Add($"(" + String.Join(", ", sValue) + $")");
-            }
-
-            commandText += $" {string.Join(", ", sValues)}";
-            commandText += ";";
-
-            return commandText;
+            return reader.GetString(0); //The first value is always the Key
         }
 
-        private string GetValueString(ManagedMetaObject metaObjectDescriptor, ColumnDescription columnDescription, ManagedObjectBase entry)
+        private ManagedObjectBase GetOrCreateDataInstance(string guidKey, List<ManagedObjectBase> dataSet, ManagedMetaObject metaObjectDescriptor, object dataStore)
         {
-            var property = metaObjectDescriptor.Type.GetProperty(columnDescription.Name);
-            var value = property.GetValue(entry);
+            return GetInstanceFromModelContainer(guidKey, DataSet) ?? CreateInstanceOfManagedObject(guidKey, metaObjectDescriptor, dataStore);
+        }
 
-            if (value == null)
+        private ManagedObjectBase CreateInstanceOfManagedObject(string guidKey, ManagedMetaObject metaObjectDescriptor, object dataStore)
+        {
+            ManagedObjectBase data = null;
+            var ctor = metaObjectDescriptor.Type.GetConstructor(new Type[] { });
+            data = ctor.Invoke(new object[] { }) as ManagedObjectBase;
+            InsertDataIntoModelContainer(data, dataStore);
+            return data;
+        }
+
+        private ManagedObjectBase GetInstanceFromModelContainer(string guidKey, List<ManagedObjectBase> dataSet)
+        {
+            return dataSet.FirstOrDefault(x => x.Key == guidKey);
+        }
+
+        private void InsertDataIntoModelContainer(ManagedObjectBase data, object dataStore)
+        {
+            var addMethodinfo = dataStore.GetType().GetMethod("Add");
+            addMethodinfo.Invoke(dataStore, new object[] { data.Key, data });
+        }
+
+        private void InjectDetailsintoDataInstance(ManagedObjectBase data, DbDataReader reader, TableDescription tableDescription)
+        {
+            var i = 1;
+            foreach (var column in tableDescription.Columns.OrderBy(x => !x.IsKey).Skip(1)) //Key always needs to be the first variable
             {
-                return "NULL";
-            }
-            else
-            {
-                if (columnDescription.IsReference)
+                object value = null;
+                if (column.IsReference)
                 {
-                    var data = columnDescription.Type.GetProperty("Key").GetValue(value);
-                    return data.ToString();
+                    value = reader.GetString(i);
                 }
-                else if (value.GetType() == typeof(DateTime))
+                else if (column.Type == typeof(string))
                 {
-                    DateTime? date = value as DateTime?;
-                    if (date.HasValue)
-                    {
-                        return date.Value.ToString("yyyy-MM-dd HH:mm:ss");
-                    }
+                    value = reader.GetString(i);
+                }
+                else if (column.Type == typeof(int))
+                {
+                    value = reader.GetInt32(i);
+                }
+                else if (column.Type == typeof(Int64))
+                {
+                    value = reader.GetInt64(i);
+                }
+                else if (column.Type == typeof(bool))
+                {
+                    value = reader.GetInt32(i) != 0;
+                }
+                else if (column.Type == typeof(DateTime))
+                {
+                    value = reader.GetDateTime(i);
+                }
+                else if (column.Type == typeof(TimeSpan))
+                {
+                    var raw = reader.GetInt32(i);
+                    value = TimeSpan.FromSeconds(raw);
+                }
+                else if (column.Type.IsEnum)
+                {
+                    var raw = reader.GetInt32(i);
+                    value = Enum.Parse(column.Type, raw.ToString());
+                }
+
+                if (column.IsReference)
+                {
+                    var managedReference = data.GetType().GetProperty(column.Name).GetValue(data);
+                    managedReference.GetType().GetProperty(nameof(Model.Base.ManagedReference<ManagedObjectBase, ManagedObjectBase>.Key)).SetValue(managedReference, value);
                 }
                 else
                 {
-                    return value.ToString();
+                    data.GetType().GetProperty(column.Name).SetValue(data, value);
                 }
-            }
 
-            return null;
+                i++;
+            }
         }
+
     }
 }
