@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BackendManager", "BackendMa
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Model", "Model\Model.csproj", "{DB68A373-273A-485E-BA3D-F198B4296109}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataInfoFramework", "DataInfoFramework\DataInfoFramework.csproj", "{DACB97EC-AD71-43F0-8F6F-17D29F5F0E96}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{DB68A373-273A-485E-BA3D-F198B4296109}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DB68A373-273A-485E-BA3D-F198B4296109}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DB68A373-273A-485E-BA3D-F198B4296109}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DACB97EC-AD71-43F0-8F6F-17D29F5F0E96}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DACB97EC-AD71-43F0-8F6F-17D29F5F0E96}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DACB97EC-AD71-43F0-8F6F-17D29F5F0E96}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DACB97EC-AD71-43F0-8F6F-17D29F5F0E96}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
