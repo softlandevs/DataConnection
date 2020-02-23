@@ -72,6 +72,7 @@
     <Compile Include="SQL\SqlCreateUserWithRights.cs" />
     <Compile Include="SQL\SqlDropDataBase.cs" />
     <Compile Include="SQL\SqlDropUser.cs" />
+    <Compile Include="SQL\SqlLoadData.cs" />
     <Compile Include="SQL\SqlPushData.cs" />
     <Compile Include="SQL\SqlSetupDataBase.cs" />
     <Compile Include="SQL\SqlTaskBase.cs" />

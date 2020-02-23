@@ -11,7 +11,7 @@ namespace Model.Base
     {
         public ManagedObjectBase()
         {
-            Key = new Guid().ToString();
+            Key = Guid.NewGuid().ToString();
             Created = DateTime.Now;
             LastModified = DateTime.Now;
             Verison = -1;

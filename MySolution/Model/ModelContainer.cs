@@ -24,7 +24,7 @@ namespace Model
             Resources = new Dictionary<string, Resource.Resource>();
         }
 
-        public long VersionHead {get;set;}
+        public long VersionHead { get; set; } = -1;
 
         public Dictionary<string, Personal.User> Users { get; }
         public Dictionary<string, Personal.UserSettings> UserSettingss { get; }

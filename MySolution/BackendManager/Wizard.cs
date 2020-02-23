@@ -32,7 +32,8 @@ namespace BackendManager
 
         public void PushDataToBackend(BackendConfiguration newConfig, ModelContainer model)
         {
-
+            var action = new Action.PushDataAction(newConfig, model);
+            action.Invoke();
         }
 
         private async void CreateDataBase(BackendConfiguration config, BackendConfiguration superConfig)

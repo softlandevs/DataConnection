@@ -56,7 +56,7 @@ namespace BackendManager.Sync
         {
             if (metaProp.Attribute is DataInfoFramework.Annotation.ManagedKeyPropertyAttribute)
             {
-                return "BIGINT";
+                return "VARCHAR(50)";
             }
             else if (metaProp.Attribute is DataInfoFramework.Annotation.ManagedVersionPropertyAttribute)
             {
@@ -64,7 +64,7 @@ namespace BackendManager.Sync
             }
             else if (metaProp.Attribute is DataInfoFramework.Annotation.ManagedReferencePropertyAttribute)
             {
-                return "INT";
+                return "VARCHAR(50)";
             }
             else if (metaProp.Attribute is DataInfoFramework.Annotation.ManagedBoolPropertyAttribute)
             {
